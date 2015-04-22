@@ -1,7 +1,7 @@
 package ie.tcd.gourleys.ui;
 
-import ie.tcd.gourleys.renderer.TextContainer;
-import ie.tcd.gourleys.renderer.TextTransfer;
+import ie.tcd.gourleys.Main;
+import ie.tcd.gourleys.system.*;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -11,7 +11,7 @@ public class TextEditorWindow extends Frame implements ActionListener {
 
 	private BorderLayout layout;
 	private MenuBar menubar;
-	private TextArea textarea;
+	private TextEditorArea textarea;
 	private TextTransfer clipboard = new TextTransfer();
 	private static final int FRAMEX = 500;
 	private static final int FRAMEY = 500;
@@ -30,12 +30,11 @@ public class TextEditorWindow extends Frame implements ActionListener {
 		this.setSize(FRAMEX,FRAMEY);
 		this.setLocation(x, y);
 
-		this.setTitle(contents.getTitle());
 		createMenuBar();
-		textarea = new TextArea(contents.getContent());	
-
+		textarea = new TextEditorArea(contents.getContent());
 		layout = new BorderLayout(LAY_GAP, LAY_GAP);
 		this.setLayout(layout);
+		this.setTitle(contents.getTitle());
 		this.add(textarea, BorderLayout.CENTER);
 	}
 
@@ -48,7 +47,7 @@ public class TextEditorWindow extends Frame implements ActionListener {
 	}
 
 	/* ====================================================================
-	 * 		Create UI
+	 * 		Create menu bar
 	 * ====================================================================	
 	 */
 
@@ -56,18 +55,41 @@ public class TextEditorWindow extends Frame implements ActionListener {
 		menubar = new MenuBar();
 		this.setMenuBar(menubar);
 
+		// File menu
 		Menu file = new Menu("File");
-		MenuItem[] fileitem = {new MenuItem("New"), new MenuItem("Open..."), new MenuItem("Save"),
-				new MenuItem("Save As...")};
+		MenuItem newFile = new MenuItem("New");
+		newFile.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('n')));
+		MenuItem open = new MenuItem("Open...");
+		open.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('o')));
+		MenuItem save = new MenuItem("Save");
+		save.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('s')));
+		MenuItem saveAs = new MenuItem("Save As...");
+		saveAs.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('s'), true));
+
+		MenuItem[] fileitem = {newFile, open, save, saveAs};
 		for (int i = 0; i < fileitem.length; i++) {
 			file.add(fileitem[i]);
 			fileitem[i].addActionListener(this);
 		}
 		menubar.add(file);
 
+		// Edit menu
 		Menu edit = new Menu("Edit");
-		MenuItem[] edititem = {new MenuItem("Undo"), new MenuItem("Redo"), new MenuItem("Cut"),
-				new MenuItem("Copy"), new MenuItem("Paste"), new MenuItem("Delete"), new MenuItem("Select All")};
+		MenuItem undo = new MenuItem("Undo");
+		undo.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('z')));
+		MenuItem redo = new MenuItem("Redo");
+		redo.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('y')));
+		MenuItem cut = new MenuItem("Cut");
+		cut.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('x')));
+		MenuItem copy = new MenuItem("Copy");
+		copy.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('c')));
+		MenuItem paste = new MenuItem("Paste");
+		paste.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('v')));
+		MenuItem delete = new MenuItem("Delete");
+		delete.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('d')));
+		MenuItem select = new MenuItem("Select All");
+		select.setShortcut(new MenuShortcut(KeyEvent.getExtendedKeyCodeForChar('a')));
+		MenuItem[] edititem = {undo, redo, cut,	copy, paste, delete, select};
 		for (int i = 0; i < edititem.length; i++) {
 			edit.add(edititem[i]);
 			edititem[i].addActionListener(this);
@@ -88,7 +110,6 @@ public class TextEditorWindow extends Frame implements ActionListener {
 	 * ====================================================================	
 	 */
 
-	@Override
 	public void actionPerformed(ActionEvent e) {
 		String action = e.getActionCommand();
 
@@ -103,15 +124,19 @@ public class TextEditorWindow extends Frame implements ActionListener {
 			break;
 		case "save":
 			System.out.println("Save current file.");
+			FileManager.quicksave(this);
 			break;
 		case "save as...":
 			System.out.println("Save current file as...");
+			FileManager.save(this);
 			break;
 		case "undo":
 			System.out.println("Undo change.");
+			textarea.undo();
 			break;
 		case "redo":
 			System.out.println("Redo changes.");
+			textarea.redo();
 			break;
 		case "cut":
 			System.out.println("Cut item.");
@@ -128,7 +153,11 @@ public class TextEditorWindow extends Frame implements ActionListener {
 			break;
 		case "delete":
 			System.out.println("Delete item.");
-			textarea.replaceRange("", textarea.getSelectionStart(), textarea.getSelectionEnd());
+			if (textarea.getSelectionStart() != textarea.getSelectionEnd()) {
+				textarea.replaceRange("", textarea.getSelectionStart(), textarea.getSelectionEnd());
+			} else {
+				textarea.replaceRange("", textarea.getCaretPosition()-1, textarea.getCaretPosition());
+			}
 			break;
 		case "select all":
 			System.out.println("All Selected");
@@ -136,7 +165,7 @@ public class TextEditorWindow extends Frame implements ActionListener {
 			break;
 		}
 	}
-
+	
 	/* ====================================================================
 	 * 		is()
 	 * ====================================================================	
@@ -162,6 +191,14 @@ public class TextEditorWindow extends Frame implements ActionListener {
 	public void setOpenWindow(boolean state) {
 		openWindow = state;
 	}
+	
+	public TextArea getText() {
+		return textarea;
+	}
+	
+	public TextContainer getOpen() {
+		return FileManager.open(this);
+	}
 
 
 	/* ====================================================================
@@ -170,10 +207,7 @@ public class TextEditorWindow extends Frame implements ActionListener {
 	 */
 
 	public static void main(String[] args) {
-		TextEditorWindow w = new TextEditorWindow();
-		TextWindowEvent l = new TextWindowEvent();
-		w.addWindowListener(l);
-		w.setVisible(true);
+		Main.main(args);
 	}
 
 }
