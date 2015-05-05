@@ -1,7 +1,5 @@
 package ie.tcd.gourleys.system;
 
-import java.awt.TextArea;
-
 public class History {
 
 	public static final int LENGTH = 30;

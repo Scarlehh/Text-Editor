@@ -6,6 +6,7 @@ import java.awt.TextArea;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
+@SuppressWarnings("serial")
 public class TextEditorArea extends TextArea implements KeyListener {
 
 	private History history = new History();
