@@ -1,52 +1,43 @@
 package ie.tcd.gourleys.system;
 
+import java.util.Stack;
+
 public class History {
 
 	public static final int LENGTH = 30;
-	private String[] history;
-	private int index;
+	private Stack<String> history;
+	private Stack<String> save;
 	
 	public History() {
-		history = new String[LENGTH];
-		index = 0;
+		history = new Stack<>();
+		save = new Stack<>();
 	}
 	
 	public void addHistory(String text) {
-		if (index == LENGTH) {
-			shiftHistory();
+		if(!save.empty()) {
+			save.removeAllElements();
 		}
-		history[index] = text;
-		index++;
-	}
-	
-	public void addHistory(char letter) {
-		addHistory(letter + "");
-	}
-	
-	public void shiftHistory() {
-		for (int i = 0; i < history.length-1; i++) {
-			history[i] = history[i+1];
+		if (history.size() >= LENGTH) {
+			history.removeElementAt(0);
 		}
+		history.push(text);
 	}
 	
 	public String previous() {
-		if (index > 1) {
-			index--;
-			return history[index];
+		if(!history.empty()) {
+			System.out.println(history.peek());
+			save.push(history.pop());
+			return save.peek();
 		}
-		return history[index-1];
+		return null;
 	}
 	
 	public String next() {
-		if (index < LENGTH) {
-			if (history[index] != null) {
-				index++;
-				if (history[index] != null) {
-					return history[index];
-				}
-			}
+		if(!save.empty()) {
+			history.push(save.pop());
+			return history.peek();
 		}
-		return history[index-1];
+		return null;
 	}
 	
 }
